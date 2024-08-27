@@ -278,10 +278,12 @@ h1, h2, h3 {
 
 .mobile-controls {
     display: none;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 5px;
     margin-top: 20px;
+    width: 100%;
+    max-width: 400px;
 }
 
 .mobile-btn {
@@ -289,21 +291,19 @@ h1, h2, h3 {
     background-color: #4CAF50;
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
+    font-size: 14px;
+    margin: 0;
     cursor: pointer;
     transition-duration: 0.4s;
-    width: calc(33.33% - 10px);
-    height: 60px;
+    flex: 1;
+    height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 24px;
-    padding: 0;
 }
 
 .mobile-btn:hover {
@@ -311,7 +311,7 @@ h1, h2, h3 {
 }
 
 .mobile-btn.hold {
-    width: calc(66.66% - 10px);
+    flex: 2;
 }
 
 @media (max-width: 1024px) {
