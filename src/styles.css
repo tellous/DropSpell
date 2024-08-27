@@ -42,7 +42,7 @@ body {
 
 .game-board-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: flex-start;
     width: 100%;
 }
@@ -52,7 +52,7 @@ body {
     flex-direction: column;
     align-items: center;
     width: 80px;
-    margin: 0 20px;
+    margin: 0 15px;
 }
 
 .left-container {
@@ -71,6 +71,7 @@ body {
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    margin: 0 15px;
 }
 
 .held-shape-container,
@@ -217,27 +218,29 @@ h3 {
 
     .side-container {
         width: 50px;
+        margin: 0 15px;
     }
 
     .left-container {
-        margin-right: 10px;
+        margin-right: calc(BLOCK_SIZE + 5px);
     }
 
     .right-container {
-        margin-left: 10px;
+        margin-left: calc(BLOCK_SIZE + 5px);
     }
 
     .game-board {
-        width: calc(100vw - 120px) !important;
-        height: calc((100vw - 120px) * 2) !important;
+        width: calc(100vw - 180px) !important;
+        height: calc((100vw - 180px) * 2) !important;
         max-width: 240px;
         max-height: 480px;
+        margin: 0 15px;
     }
 
     .held-shape,
     .next-shapes {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
     }
 
     .score-container {
@@ -247,32 +250,45 @@ h3 {
     .mobile-controls {
         display: flex;
     }
+
+    .held-shape,
+    .next-shapes {
+        width: 60px;
+        height: 60px;
+    }
+
+    .held-shape div,
+    .next-shapes div {
+        transform: scale(0.75);
+    }
 }
 
 @media (max-width: 400px) {
     .side-container {
         width: 40px;
+        margin: 0 12px;
     }
 
     .left-container {
-        margin-right: 5px;
+        margin-right: 20px;
     }
 
     .right-container {
-        margin-left: 5px;
+        margin-left: 20px;
     }
 
     .game-board {
-        width: calc(100vw - 90px) !important;
-        height: calc((100vw - 90px) * 2) !important;
+        width: calc(100vw - 160px) !important;
+        height: calc((100vw - 160px) * 2) !important;
         max-width: 200px;
         max-height: 400px;
+        margin: 0 12px;
     }
 
     .held-shape,
     .next-shapes {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
     }
 
     .score-container {

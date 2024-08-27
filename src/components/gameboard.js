@@ -3,6 +3,8 @@ import Block from './block';
 import AIPlayer from './ai-player';
 import MobileControls from './MobileControls';
 
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 export const COLORS = ['red', 'green', 'blue'];
 export const SHAPES = [
     [[1, 1], [1, 1]], // Square
@@ -34,8 +36,6 @@ const GameBoard = ({ testFullBoard = null }) => {
     const [score, setScore] = useState(0);
     const [linesCompleted, setLinesCompleted] = useState(0);
     const boardRef = useRef(null);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [bottomBlocks, setBottomBlocks] = useState([]);
     const [hoverBlock, setHoverBlock] = useState(null);
     const [isDraggingDisabled, setIsDraggingDisabled] = useState(false);
@@ -251,8 +251,8 @@ const GameBoard = ({ testFullBoard = null }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
-    const holdShape = () => {
-        if (!canHold) return;
+    const holdShape = useCallback(() => {
+        if (!canHold || !currentShape) return;
 
         if (heldShape) {
             const temp = currentShape.shape;
@@ -267,7 +267,7 @@ const GameBoard = ({ testFullBoard = null }) => {
             spawnNewShape();
         }
         setCanHold(false);
-    };
+    }, [canHold, currentShape, heldShape, spawnNewShape]);
 
     const moveShapeDown = () => {
         if (currentShape) {
@@ -392,7 +392,6 @@ const GameBoard = ({ testFullBoard = null }) => {
         const y = Math.floor(mouseY / BLOCK_SIZE);
 
         setDraggedBlock(prev => ({ ...prev, x, y }));
-        setMousePosition({ x: mouseX, y: mouseY });
 
         const hoverTarget = bottomBlocks.find(block =>
             block.x === x && block.y === y &&
@@ -421,6 +420,48 @@ const GameBoard = ({ testFullBoard = null }) => {
         }
         setDraggedBlock(null);
         setHoverBlock(null);
+    };
+
+    // Add these new functions for touch events
+    const handleTouchStart = (e) => {
+        if (gameOver || !gameStarted || isDraggingDisabled) return;
+
+        const touch = e.touches[0];
+        const rect = boardRef.current.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        const x = Math.floor(touchX / BLOCK_SIZE);
+        const y = Math.floor(touchY / BLOCK_SIZE);
+
+        const touchedBlock = bottomBlocks.find(block => block.x === x && block.y === y);
+        if (touchedBlock) {
+            setDraggedBlock({ ...touchedBlock, originalX: touchedBlock.x, originalY: touchedBlock.y });
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (!draggedBlock) return;
+
+        e.preventDefault(); // Prevent scrolling while dragging
+
+        const touch = e.touches[0];
+        const rect = boardRef.current.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        const x = Math.floor(touchX / BLOCK_SIZE);
+        const y = Math.floor(touchY / BLOCK_SIZE);
+
+        setDraggedBlock(prev => ({ ...prev, x, y }));
+
+        const hoverTarget = bottomBlocks.find(block =>
+            block.x === x && block.y === y &&
+            (block.x !== draggedBlock.originalX || block.y !== draggedBlock.originalY)
+        );
+        setHoverBlock(hoverTarget);
+    };
+
+    const handleTouchEnd = () => {
+        handleMouseUp(); // Reuse the existing mouseUp logic
     };
 
     const renderCurrentShape = () => {
@@ -452,49 +493,37 @@ const GameBoard = ({ testFullBoard = null }) => {
         ));
     };
 
-    const renderDraggedBlockCopy = () => {
-        if (!draggedBlock) return null;
-        const boardRect = boardRef.current.getBoundingClientRect();
-        return (
-            <Block
-                key="dragged-copy"
-                color={draggedBlock.color}
-                x={(mousePosition.x - boardRect.left) / BLOCK_SIZE - 0.5}
-                y={(mousePosition.y - boardRect.top) / BLOCK_SIZE - 0.5}
-                isMouseAttached={true}
-                isDraggable={false}
-                blockSize={BLOCK_SIZE}
-            />
-        );
-    };
-
     const renderPreviewShape = (shape) => {
         if (!shape) return null;
         const shapeWidth = shape[0].length;
         const shapeHeight = shape.length;
-        const containerSize = 80; // Size of the container in pixels
-        const blockSize = Math.min(containerSize / Math.max(shapeWidth, shapeHeight), 20); // Use smaller of 20px or size that fits container
+        const containerSize = window.innerWidth <= 400 ? 50 : window.innerWidth <= 768 ? 60 : 80;
+        const blockSize = Math.min(containerSize / Math.max(shapeWidth, shapeHeight), 20);
 
         // Calculate offsets to center the shape
         const offsetX = (containerSize - shapeWidth * blockSize) / 2;
         const offsetY = (containerSize - shapeHeight * blockSize) / 2;
 
-        return shape.flatMap((row, y) =>
-            row.map((color, x) => color ? (
-                <div
-                    key={`preview-${x}-${y}`}
-                    style={{
-                        position: 'absolute',
-                        left: `${offsetX + x * blockSize}px`,
-                        top: `${offsetY + y * blockSize}px`,
-                        width: `${blockSize}px`,
-                        height: `${blockSize}px`,
-                        backgroundColor: color,
-                        border: '1px solid rgba(0, 0, 0, 0.2)',
-                        boxSizing: 'border-box',
-                    }}
-                />
-            ) : null)
+        return (
+            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                {shape.flatMap((row, y) =>
+                    row.map((color, x) => color ? (
+                        <div
+                            key={`preview-${x}-${y}`}
+                            style={{
+                                position: 'absolute',
+                                left: `${offsetX + x * blockSize}px`,
+                                top: `${offsetY + y * blockSize}px`,
+                                width: `${blockSize}px`,
+                                height: `${blockSize}px`,
+                                backgroundColor: color,
+                                border: '1px solid rgba(0, 0, 0, 0.2)',
+                                boxSizing: 'border-box',
+                            }}
+                        />
+                    ) : null)
+                )}
+            </div>
         );
     };
 
@@ -502,29 +531,33 @@ const GameBoard = ({ testFullBoard = null }) => {
         if (!heldShape) return null;
         const shapeWidth = heldShape[0].length;
         const shapeHeight = heldShape.length;
-        const containerSize = 80; // Size of the container in pixels
-        const blockSize = Math.min(containerSize / Math.max(shapeWidth, shapeHeight), 20); // Use smaller of 20px or size that fits container
+        const containerSize = window.innerWidth <= 400 ? 50 : window.innerWidth <= 768 ? 60 : 80;
+        const blockSize = Math.min(containerSize / Math.max(shapeWidth, shapeHeight), 20);
 
         // Calculate offsets to center the shape
         const offsetX = (containerSize - shapeWidth * blockSize) / 2;
         const offsetY = (containerSize - shapeHeight * blockSize) / 2;
 
-        return heldShape.flatMap((row, y) =>
-            row.map((color, x) => color ? (
-                <div
-                    key={`held-${x}-${y}`}
-                    style={{
-                        position: 'absolute',
-                        left: `${offsetX + x * blockSize}px`,
-                        top: `${offsetY + y * blockSize}px`,
-                        width: `${blockSize}px`,
-                        height: `${blockSize}px`,
-                        backgroundColor: color,
-                        border: '1px solid rgba(0, 0, 0, 0.2)',
-                        boxSizing: 'border-box',
-                    }}
-                />
-            ) : null)
+        return (
+            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                {heldShape.flatMap((row, y) =>
+                    row.map((color, x) => color ? (
+                        <div
+                            key={`held-${x}-${y}`}
+                            style={{
+                                position: 'absolute',
+                                left: `${offsetX + x * blockSize}px`,
+                                top: `${offsetY + y * blockSize}px`,
+                                width: `${blockSize}px`,
+                                height: `${blockSize}px`,
+                                backgroundColor: color,
+                                border: '1px solid rgba(0, 0, 0, 0.2)',
+                                boxSizing: 'border-box',
+                            }}
+                        />
+                    ) : null)
+                )}
+            </div>
         );
     };
 
@@ -579,14 +612,16 @@ const GameBoard = ({ testFullBoard = null }) => {
                     data-testid="game-board"
                     ref={boardRef}
                     className="game-board"
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
+                    onMouseDown={isMobile ? null : handleMouseDown}
+                    onMouseMove={isMobile ? null : handleMouseMove}
+                    onMouseUp={isMobile ? null : handleMouseUp}
+                    onMouseLeave={isMobile ? null : handleMouseUp}
+                    onTouchStart={isMobile ? handleTouchStart : null}
+                    onTouchMove={isMobile ? handleTouchMove : null}
+                    onTouchEnd={isMobile ? handleTouchEnd : null}
                 >
                     {renderBottomBlocks()}
                     {renderCurrentShape()}
-                    {renderDraggedBlockCopy()}
                     {gameOver && <div className="game-over">Game Over</div>}
                     {!gameStarted && (
                         <div className="start-button-container">
