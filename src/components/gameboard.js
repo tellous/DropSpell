@@ -25,7 +25,7 @@ const GameBoard = ({ testFullBoard = null }) => {
             row.map(cell => cell ? COLORS[Math.floor(Math.random() * COLORS.length)] : 0)
         );
     };
-    
+
     const [nextShapes, setNextShapes] = useState(() => [generateShape()]);
     const [blocks, setBlocks] = useState([]);
     const [currentShape, setCurrentShape] = useState(null);
@@ -98,8 +98,8 @@ const GameBoard = ({ testFullBoard = null }) => {
             }
         },
         moveBlock: (block, newX, newY) => {
-            setBottomBlocks(prevBlocks => 
-                prevBlocks.map(b => 
+            setBottomBlocks(prevBlocks =>
+                prevBlocks.map(b =>
                     b === block ? { ...b, x: newX, y: newY } : b
                 )
             );
@@ -134,7 +134,7 @@ const GameBoard = ({ testFullBoard = null }) => {
         setNextShapes(prevShapes => {
             const newShape = prevShapes.length > 0 ? prevShapes[0] : generateShape();
             const nextShape = generateShape();
-            
+
             const newCurrentShape = {
                 shape: newShape,
                 x: Math.floor(BOARD_WIDTH / 2) - Math.floor(newShape[0].length / 2),
@@ -246,7 +246,7 @@ const GameBoard = ({ testFullBoard = null }) => {
 
     const holdShape = () => {
         if (!canHold) return;
-        
+
         if (heldShape) {
             const temp = currentShape.shape;
             setCurrentShape({
@@ -274,7 +274,7 @@ const GameBoard = ({ testFullBoard = null }) => {
     const placeShape = useCallback(() => {
         setCurrentShape(currentShape => {
             if (!currentShape) return null;
-            
+
             const newBlocks = currentShape.shape.flatMap((row, y) =>
                 row.map((color, x) => color ? {
                     color,
@@ -322,7 +322,7 @@ const GameBoard = ({ testFullBoard = null }) => {
 
     const animateMatchAndDrop = useCallback((matchedRows, blocks) => {
         // Step 1: Turn matched rows white
-        setBottomBlocks(blocks.map(block => 
+        setBottomBlocks(blocks.map(block =>
             matchedRows.includes(block.y) ? { ...block, color: 'white' } : block
         ));
 
@@ -359,13 +359,13 @@ const GameBoard = ({ testFullBoard = null }) => {
 
     const handleMouseDown = (e) => {
         if (gameOver || !gameStarted || isDraggingDisabled) return;
-        
+
         const rect = boardRef.current.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         const x = Math.floor(mouseX / BLOCK_SIZE);
         const y = Math.floor(mouseY / BLOCK_SIZE);
-        
+
         const clickedBlock = bottomBlocks.find(block => block.x === x && block.y === y);
         if (clickedBlock) {
             setDraggedBlock({ ...clickedBlock, originalX: clickedBlock.x, originalY: clickedBlock.y });
@@ -383,9 +383,9 @@ const GameBoard = ({ testFullBoard = null }) => {
 
         setDraggedBlock(prev => ({ ...prev, x, y }));
         setMousePosition({ x: mouseX, y: mouseY });
-        
-        const hoverTarget = bottomBlocks.find(block => 
-            block.x === x && block.y === y && 
+
+        const hoverTarget = bottomBlocks.find(block =>
+            block.x === x && block.y === y &&
             (block.x !== draggedBlock.originalX || block.y !== draggedBlock.originalY)
         );
         setHoverBlock(hoverTarget);
@@ -405,7 +405,7 @@ const GameBoard = ({ testFullBoard = null }) => {
                 });
                 return updatedBlocks;
             });
-            
+
             // Check for matches after updating the blocks
             setTimeout(() => checkForMatches(), 0);
         }
@@ -464,7 +464,7 @@ const GameBoard = ({ testFullBoard = null }) => {
         const shapeHeight = shape.length;
         const containerSize = 80; // Size of the container in pixels
         const blockSize = Math.min(containerSize / Math.max(shapeWidth, shapeHeight), 20); // Use smaller of 20px or size that fits container
-        
+
         // Calculate offsets to center the shape
         const offsetX = (containerSize - shapeWidth * blockSize) / 2;
         const offsetY = (containerSize - shapeHeight * blockSize) / 2;
@@ -494,7 +494,7 @@ const GameBoard = ({ testFullBoard = null }) => {
         const shapeHeight = heldShape.length;
         const containerSize = 80; // Size of the container in pixels
         const blockSize = Math.min(containerSize / Math.max(shapeWidth, shapeHeight), 20); // Use smaller of 20px or size that fits container
-        
+
         // Calculate offsets to center the shape
         const offsetX = (containerSize - shapeWidth * blockSize) / 2;
         const offsetY = (containerSize - shapeHeight * blockSize) / 2;
@@ -573,9 +573,11 @@ const GameBoard = ({ testFullBoard = null }) => {
                     {renderDraggedBlockCopy()}
                     {gameOver && <div className="game-over">Game Over</div>}
                     {!gameStarted && (
-                        <button className="start-button" onClick={initializeGame}>
-                            Start Game
-                        </button>
+                        <div className="start-button-container">
+                            <button className="start-button" onClick={initializeGame}>
+                                Start Game
+                            </button>
+                        </div>
                     )}
                 </div>
                 <div className="side-container right-container">
