@@ -141,16 +141,21 @@ const GameBoard = ({ testFullBoard = null }) => {
                 y: 0
             };
 
+            console.log('Attempting to spawn new shape:', newCurrentShape);
+            console.log('Current bottom blocks:', bottomBlocks);
+
             if (canMoveTo(newCurrentShape.x, newCurrentShape.y, newCurrentShape.shape)) {
+                console.log('New shape can be placed');
                 setCurrentShape(newCurrentShape);
                 setCanHold(true);
                 return [nextShape];
             } else {
+                console.log('Game Over: Cannot spawn new shape');
                 handleGameOver();
                 return prevShapes;
             }
         });
-    }, [canMoveTo, handleGameOver]);
+    }, [canMoveTo, handleGameOver, bottomBlocks]);
 
     useEffect(() => {
         if (!gameStarted || gameOver) return;
@@ -186,8 +191,10 @@ const GameBoard = ({ testFullBoard = null }) => {
                     if (
                         newX < 0 || newX >= BOARD_WIDTH ||
                         newY >= BOARD_HEIGHT ||
-                        (newY >= 0 && bottomBlocks.some(block => block.x === newX && block.y === newY))
+                        (newY >= 0 && bottomBlocks.some(block => block.x === newX && block.y === newY)) ||
+                        (newY < 0 && bottomBlocks.some(block => block.x === newX && block.y === 0))
                     ) {
+                        console.log(`Cannot move to: x=${newX}, y=${newY}`);
                         return false;
                     }
                 }
@@ -283,8 +290,11 @@ const GameBoard = ({ testFullBoard = null }) => {
                 } : null)
             ).filter(block => block !== null);
 
+            console.log('Placing shape:', newBlocks);
+
             setBottomBlocks(prevBottomBlocks => {
                 const updatedBlocks = [...prevBottomBlocks, ...newBlocks];
+                console.log('Updated bottom blocks:', updatedBlocks);
                 return updatedBlocks.sort((a, b) => b.y - a.y);
             });
 
@@ -518,11 +528,17 @@ const GameBoard = ({ testFullBoard = null }) => {
         );
     };
 
-    const handleGameOver = () => {
+    const handleGameOver = useCallback(() => {
+        console.log('Game Over triggered');
         setGameOver(true);
         setCurrentShape(null);
         setGameStarted(false);
-    };
+        // You might want to add any other game over logic here
+    }, []);
+
+    useEffect(() => {
+        console.log('Game over state changed:', gameOver);
+    }, [gameOver]);
 
     useEffect(() => {
         if (testFullBoard) {
