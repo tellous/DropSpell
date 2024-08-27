@@ -335,3 +335,8 @@ h1, h2, h3 {
 .start-button:hover {
     background-color: #45a049;
 }
+
+.game-footer {
+    text-align: center;
+    font-size: 12px;
+}
