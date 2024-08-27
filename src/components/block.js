@@ -1,20 +1,23 @@
 import React from 'react';
 
-const Block = ({ color, x, y, size = 20, isDragging }) => {
-    const style = {
-        backgroundColor: color,
-        left: `${x * size}px`,
-        top: `${y * size}px`,
-        position: 'absolute',
-        width: `${size}px`,
-        height: `${size}px`,
-        border: '1px solid black',
-        transition: isDragging ? 'none' : 'all 0.1s',
-        zIndex: isDragging ? 10 : 1,
-        opacity: isDragging ? 0.7 : 1,
-    };
-
-    return <div className="block" style={style}></div>;
+const Block = ({ color, x, y, isTransparent, isWiggling, isDraggable, isMouseAttached, blockSize }) => {
+    return (
+        <div
+            className={`block ${isWiggling ? 'wiggle' : ''}`}
+            style={{
+                backgroundColor: color,
+                left: `${x * blockSize}px`,
+                top: `${y * blockSize}px`,
+                width: `${blockSize}px`,
+                height: `${blockSize}px`,
+                opacity: isTransparent ? 0.5 : 1,
+                cursor: isDraggable ? 'grab' : 'default',
+                position: isMouseAttached ? 'fixed' : 'absolute',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                boxSizing: 'border-box',
+            }}
+        />
+    );
 };
 
 export default Block;
